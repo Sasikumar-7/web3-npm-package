@@ -38,4 +38,15 @@ var payload = {
             gas: "gas Amount to Spend like 21000 for basic Transaction need"
         }
 var transferAmount = await transferAmount(payload)
+
+var decodeLogsParameter = await decodeLogsParameter("rpcurl", "type", "topic")
+// type must be uint256 or string or address 
+
+var contractCallMethods = await contractCall("rpcurl", "ABI", "ContractAddress", "function Name", ["parameter", "parameter"])
+// parameters in Array format what are the inputs are given. if no parameters are given then give the empty array.
+
+
+var getContractBalance = await getContractBalance("rpcurl", "ABI", "ContractAddress", "userAddress")
+
+
 ```

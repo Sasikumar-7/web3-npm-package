@@ -1,5 +1,5 @@
 const web3 = require("web3");
-
+const Abi = require('./erc20.json')
 
 const getBalance = async (rpcurl, address) => {
     try {
@@ -166,28 +166,41 @@ const transferAmount = async (data) => {
     }
 }
 
-const check = async () => {
+const decodeLogsParameter = async (rpcurl, type, topic) => {
     try {
-        var payload = {
-            rpcurl: "https://bsc-testnet-rpc.publicnode.com",
-            from_address: '0xa073d0eA21c1b9F89ce0aDcF4E4ec77142ae62Fc',
-            to_address: '0xD2314A25975414ADccc4A9f4a54ec19D720368F0',
-            privatekey: '3c7a6e3439a854f0ff73dc2debc05cb95645048bbac82abab4380057f401dc8c',
-            amount: '0.02',
-            gas: "21000"
-        }
-        const transacion = await transferAmount(payload)
-        console.log("🚀 ~ check ~ transacion:", transacion)
+        const web3Instance = new web3(rpcurl)
+        const logs = await web3Instance.eth.abi.decodeParameter(type, topic)
+        return logs
     } catch (error) {
-        console.log("🚀 ~ check ~ error:", error)
+        return error.message
     }
 }
 
-check()
+const contractCall = async (rpcurl, Abi, address, functionName, params) => {
+    try {
+        const web3Instance = new web3(rpcurl)
+        const contractInstance = new web3Instance.eth.Contract(Abi, address)
+        const result = await contractInstance.methods[functionName](...params).call()
+        return result
+    } catch (error) {
+        return error.message
+    }
+}
 
+const getContractBalance = async (rpcurl, Abi, ContractAddress, address) => {
+    try {
+        const web3Instance = new web3(rpcurl)
+        const contractInstance = new web3Instance.eth.Contract(Abi, ContractAddress)
+        const result = await contractInstance.methods.balanceOf(address).call()
+        const decimal = await contractInstance.methods.decimals().call()
+        const balance = result / (10 ** decimal)
+        return balance
+    } catch (error) {
+        return error.message
+    }
+}
 
-
-// module.exports = { getBalance, getChainId, getCurrentBlock, getGasPrice, getBlockTransactionCount, getBlock, getTransaction, getPendingTransactions, getTransactionFromBlock, getTransactionReceipt, getTransactionCount, createAddress }
+module.exports = { getBalance, getChainId, getCurrentBlock, getGasPrice, getBlockTransactionCount, getBlock, getTransaction, getPendingTransactions, getTransactionFromBlock, getTransactionReceipt, getTransactionCount, createAddress, transferAmount, decodeLogsParameter, contractCall, getContractBalance }
 
 
 
