@@ -48,5 +48,7 @@ var contractCallMethods = await contractCall("rpcurl", "ABI", "ContractAddress",
 
 var getContractBalance = await getContractBalance("rpcurl", "ABI", "ContractAddress", "userAddress")
 
+var contractSendMethods = await contractSend("rpcurl", "ABI", "ContractAddress", "function Name","from address", "privatekey", ["parameter", "parameter"])
+
 
 ```

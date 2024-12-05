@@ -178,6 +178,9 @@ const decodeLogsParameter = async (rpcurl, type, topic) => {
 
 const contractCall = async (rpcurl, Abi, address, functionName, params) => {
     try {
+        if (!rpcurl || !Abi || !address || !functionName) {
+            return "All fields are required"
+        }
         const web3Instance = new web3(rpcurl)
         const contractInstance = new web3Instance.eth.Contract(Abi, address)
         const result = await contractInstance.methods[functionName](...params).call()
@@ -200,7 +203,55 @@ const getContractBalance = async (rpcurl, Abi, ContractAddress, address) => {
     }
 }
 
-module.exports = { getBalance, getChainId, getCurrentBlock, getGasPrice, getBlockTransactionCount, getBlock, getTransaction, getPendingTransactions, getTransactionFromBlock, getTransactionReceipt, getTransactionCount, createAddress, transferAmount, decodeLogsParameter, contractCall, getContractBalance }
+const contractSend = async (rpcurl, Abi, address, functionName, fromAddress, privatekey, params) => {
+    if (!rpcurl || !Abi || !address || !functionName || !fromAddress || !privatekey) {
+        return "All fields are required"
+    }
+    return new Promise(async (resolve, reject) => {
+        try {
+            const web3Instance = new web3(rpcurl)
+            var datas = {}
+            const contract = new web3Instance.eth.Contract(Abi, address);
+            var gasAmount = await contract.methods[functionName](...params).estimateGas({ from: fromAddress });
+            const txObject = {
+                from: fromAddress,
+                nonce: await web3Instance.eth.getTransactionCount(fromAddress),
+                to: address,
+                gas: gasAmount,
+                value: "0x0",
+                data: contract.methods[functionName](...params).encodeABI(),
+            }
+
+            await web3Instance.eth.accounts.signTransaction(txObject, privatekey, async (err, res1) => {
+                if (err) {
+                    console.log('err', err)
+                    reject(err?.message)
+                }
+                else {
+                }
+                const raw = res1.rawTransaction
+                await web3Instance.eth.sendSignedTransaction(raw, async (err, txHash) => {
+                    if (err) {
+                        reject(err?.message)
+                    }
+                    else {
+                        resolve({
+                            signTransaction: res1,
+                            transactionHash: txHash
+                        })
+
+                    }
+                })
+            })
+        } catch (error) {
+            reject(error.message)
+        }
+    })
+
+}
+
+
+module.exports = { getBalance, getChainId, getCurrentBlock, getGasPrice, getBlockTransactionCount, getBlock, getTransaction, getPendingTransactions, getTransactionFromBlock, getTransactionReceipt, getTransactionCount, createAddress, transferAmount, decodeLogsParameter, contractCall, getContractBalance, contractSend }
 
 
 

@@ -1,6 +1,6 @@
 {
   "name": "web3-simplifier",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "A simple web3 wrapper for nodejs",
   "main": "src/index.js",
   "scripts": {
