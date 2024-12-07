@@ -101,6 +101,17 @@ const txReceipt = await web3Utils.contractSend(Abi, '0xContractAddress', 'approv
                                                 // abi, contract address, function name, from address, privatekey, params
 console.log(txReceipt);
 
-
+  let fileContent = fs.readFileSync(path.join(__dirname, './Storage.sol'), 'utf8');
+    
+    // Deploy the contract using web3Utils
+    const test = await web3Utils.deployContractFromFile(
+        'v0.5.16+commit.9c3226ce', // Solidity version
+        fileContent,               // Contract file content
+        'Storage.sol',     // Contract file name
+        'Storage',         // Contract name (constructor function name)
+        '0xa073d0eA2.....142ae62Fc',  // Deployer address
+        '3c7a6.............324h3424hc', // Private key (use environment variable for security)
+        ['0xa073d0e........62Fc'] // Constructor arguments (example)
+    );
 
 ```

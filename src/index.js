@@ -1,5 +1,7 @@
 const web3 = require("web3");
-const Abi = require('./erc20.json');
+const solc = require('solc')
+const fs = require("fs");
+const path = require('path')
 
 class Web3Utils {
     constructor(rpcurl) {
@@ -196,6 +198,105 @@ class Web3Utils {
             throw new Error(error.message);
         }
     }
+
+    /**
+     * Deploys a smart contract from a .sol file.
+     * @param {String} contractPath - Path to the Solidity (.sol) contract file.
+     * @param {String} fromAddress - The address from which to deploy the contract.
+     * @param {String} privateKey - The private key of the `fromAddress` to sign the transaction.
+     * @param {Array} constructorArgs - The constructor arguments (if any) to pass during deployment.
+     * @returns {Object} - Contains the contract address and transaction receipt.
+     */
+
+
+    async loadSolc(version) {
+        return new Promise((resolve, reject) => {
+            solc.loadRemoteVersion(version, (err, solcInstance) => {
+                if (err) {
+                    reject(err);  // Reject the promise if there's an error
+                } else {
+                    resolve(solcInstance);  // Resolve with solc if successful
+                }
+            });
+        });
+    };
+    async deployContractFromFile(version, fileContent, filename, functionName, fromAddress, privateKey, constructorArgs = []) {
+        try {
+            return new Promise(async (resolve, reject) => {
+                process.stdout.write("start compling...");
+                const solcwrap = await this.loadSolc(version);
+
+                // Define the input structure for the compiler
+                const input = {
+                    language: 'Solidity',
+                    sources: {
+                        [filename]: {
+                            content: fileContent
+                        }
+                    },
+                    settings: {
+                        outputSelection: {
+                            '*': {
+                                '*': ['evm.bytecode', 'evm.deployedBytecode', 'abi']
+                            }
+                        }
+                    }
+                };
+
+                // Compile the Solidity code
+                const compiledContract = JSON.parse(solcwrap.compile(JSON.stringify(input)));
+
+                var ABI = compiledContract.contracts[filename][functionName].abi;
+                var bytecode = compiledContract.contracts[filename][functionName].evm.bytecode.object;
+                if (ABI && bytecode) {
+                    process.stdout.clearLine();
+                    process.stdout.cursorTo(0); // Move cursor to the beginning of the line
+                    console.log("Compiled!");
+                    process.stdout.write("start deploying...");
+                    // Create contract instance
+                    const contract = new this.web3Instance.eth.Contract(ABI);
+
+                    // Estimate the gas required to deploy the contract
+                    const gasEstimate = await contract.deploy({
+                        data: bytecode,
+                        arguments: constructorArgs
+                    }).estimateGas({ from: fromAddress });
+
+                    // Create the transaction object for contract deployment
+                    const txObject = {
+                        from: fromAddress,
+                        gas: gasEstimate,
+                        data: contract.deploy({
+                            data: bytecode,
+                            arguments: constructorArgs
+                        }).encodeABI()
+                    };
+                    // Sign the transaction using the private key
+                    const signedTx = await this.web3Instance.eth.accounts.signTransaction(txObject, privateKey);
+
+                    // Send the signed transaction and get the transaction hash
+                    const txHash = await this.web3Instance.eth.sendSignedTransaction(signedTx.rawTransaction);
+
+                    // Return the contract address and the transaction receipt
+                    if (txHash) {
+                        process.stdout.clearLine();
+                        process.stdout.cursorTo(0); // Move cursor to the beginning of the line
+                        console.log("Compiled!");
+                        resolve({
+                            contractAddress: txHash.contractAddress,
+                            transactionReceipt: txHash
+                        })
+                    }
+
+                } else {
+                    reject("ABI or Bytecode not found")
+                }
+            });
+        } catch (error) {
+            throw new Error(`Error deploying contract: ${error.message}`);
+        }
+    }
 }
+
 
 module.exports = Web3Utils;

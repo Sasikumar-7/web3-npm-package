@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/RameshKumar408/web3-npm-package#readme",
   "dependencies": {
+    "solc": "^0.8.28",
     "web3": "^1.8.1"
   }
 }
