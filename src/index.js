@@ -119,16 +119,27 @@ class Web3Utils {
 
     async transferAmount(data) {
         try {
-            if (!data.from_address || !data.to_address || !data.privatekey || !data.amount || !data.gas) {
-                return "All fields are required";
-            }
             const value = await this.web3Instance.utils.toWei(data.amount, 'ether');
+
+            // Get the current nonce for the sender address
+            const nonce = await this.web3Instance.eth.getTransactionCount(data.from_address, 'latest');
+
+            // Estimate the gas for the transaction
+            const gasLimit = await this.web3Instance.eth.estimateGas({
+                from: data.from_address,
+                to: data.to_address,
+                value: value,
+                gas: data.gas
+            });
+
             const signedTransaction = await this.web3Instance.eth.accounts.signTransaction(
                 {
                     from: data.from_address,
                     to: data.to_address,
-                    value,
-                    gas: data?.gas
+                    value: value,
+                    gas: gasLimit, // Use the dynamically estimated gas
+                    gasPrice: await this.web3Instance.eth.getGasPrice(), // Get the current gas price
+                    nonce: nonce, // Use the correct nonce
                 },
                 data.privatekey
             );
@@ -297,6 +308,5 @@ class Web3Utils {
         }
     }
 }
-
 
 module.exports = Web3Utils;

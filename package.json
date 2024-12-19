@@ -1,6 +1,6 @@
 {
   "name": "web3-simplifier",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A simple web3 wrapper for nodejs",
   "main": "src/index.js",
   "scripts": {
@@ -10,7 +10,19 @@
     "type": "git",
     "url": "git+https://github.com/RameshKumar408/web3-npm-package.git"
   },
-  "keywords": [],
+  "keywords": [
+    "web3-simplifier",
+    "web3",
+    "nodejs",
+    "ethereum",
+    "blockchain",
+    "solidity",
+    "contract",
+    "deploy",
+    "test",
+    "compile",
+    "sendTransaction"
+  ],
   "author": "",
   "license": "ISC",
   "bugs": {
